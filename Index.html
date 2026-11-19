@@ -204,7 +204,8 @@ html.dark .af-tag{background:rgba(2,132,199,.2);color:#7dd3fc;border-color:rgba(
 
 .sec{margin:18px 4px 9px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
 
-/* Lead Source Cards */
+/* Lead Source Cards - Fixed compact proportions (never over-stretches when few channels exist) */
+#srcKpis{grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}
 .kpi.src{padding-right:14px}.kpi.src .l::before{display:none}.kpi.src .l{padding-right:42px;font-size:12.5px;color:var(--ink);font-weight:800}
 .kpi.src.two .l{padding-right:58px}
 .ico{position:absolute;right:12px;top:12px;display:flex}
@@ -357,6 +358,7 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
 }
 @media (min-width:1380px){
   #kpis{grid-template-columns:repeat(9,minmax(0,1fr))}
+  #srcKpis{grid-template-columns:repeat(6,minmax(0,1fr))}
 }
 @media (max-width:420px){header h1{font-size:18.5px}}
 </style>
@@ -1001,6 +1003,7 @@ const SVG = {
 function srcIcon(k){
   const u = String(k).toUpperCase();
   if (/META/.test(u)) return ['<span class="ico two">'+SVG.fb+SVG.ig+'</span>', 1];
+  if (/GOOGLE/.test(u) && /WHATS|WA\b/.test(u)) return ['<span class="ico two">'+SVG.g+SVG.wa+'</span>', 1];
   if (/FACEBOOK|^FB\b/.test(u)) return ['<span class="ico">'+SVG.fb+'</span>'];
   if (/INSTA|^IG\b/.test(u)) return ['<span class="ico">'+SVG.ig+'</span>'];
   if (/GOOGLE/.test(u)) return ['<span class="ico">'+SVG.g+'</span>'];
@@ -1048,17 +1051,39 @@ function renderKpis(rows){
     {n:'4', l:'Closed Won Deals', p:pct(cl,q+cl)+' close rate', v:nf(cl)+' closed deals', w:(q+cl)?cl/(q+cl)*100:0, c:'#047857'}
   ].map(f => '<div class="f-step" style="--c:'+f.c+'"><span class="f-num">'+f.n+'</span><div class="f-body"><div class="f-lbl"><span>'+esc(f.l)+'</span><b>'+esc(f.p)+'</b></div><div class="f-val">'+esc(f.v)+'</div><div class="f-bar"><i style="width:'+Math.min(100,Math.max(0,f.w)).toFixed(1)+'%"></i></div></div></div>').join('');
 
-  const allSrc = uniq(ALL.map(r => r.src)), sc = count(rows, 'src');
-  const keys = Object.keys(sc).sort((a,b) => sc[b]-sc[a]);
+  // Keep all channels from the active sheet tab visible even when a filter is applied,
+  // and compute channel counts ignoring F.src so clicking a channel highlights it without hiding the others!
+  const tabScope = F.sheet ? ALL.filter(r => r.sheet === F.sheet) : ALL;
+  const rowsNoSrc = ALL.filter(r => {
+    if (F.sheet && r.sheet !== F.sheet) return false;
+    if (F.from && r.fd < F.from) return false;
+    if (F.to && r.fd > F.to) return false;
+    if (F.st && r.sk !== F.st) return false;
+    if (F.asg && r.asg !== F.asg) return false;
+    if (F.soon && r.pk !== F.soon) return false;
+    if (F.nat && r.nat !== F.nat) return false;
+    if (F.fz && r.fz !== F.fz) return false;
+    const vmin = F.vmin===''?null:+F.vmin, vmax = F.vmax===''?null:+F.vmax;
+    if (vmin !== null && (r.vn === null || r.vn < vmin)) return false;
+    if (vmax !== null && (r.vn === null || r.vn > vmax)) return false;
+    const qStr = F.q.trim().toLowerCase();
+    return !qStr || r.hay.indexOf(qStr) > -1;
+  });
+  const allSrc = uniq(ALL.map(r => r.src));
+  const tabSc = count(tabScope, 'src');
+  const sc = count(rowsNoSrc, 'src');
+  const totSrc = rowsNoSrc.length;
+  const keys = Object.keys(tabSc).sort((a,b) => (sc[b]||0) - (sc[a]||0) || (tabSc[b]||0) - (tabSc[a]||0));
   $('srcTitle').style.display = keys.length ? 'flex' : 'none';
   $('srcKpis').innerHTML = keys.map(k => {
+    const cnt = sc[k] || 0;
     const col = k === '(blank)' ? '#94a3b8' : PAL[allSrc.indexOf(k) % PAL.length];
     const srcVal = k === '(blank)' ? '' : k;
-    const qn = rows.filter(r => r.src === srcVal && r.sk === 'Qualified').length;
-    const cln = rows.filter(r => r.src === srcVal && r.sk === 'Closed').length;
-    const sub = pct(sc[k],n)+' share · '+nf(qn)+' qual'+(cln ? ' · '+nf(cln)+' closed' : '');
+    const qn = rowsNoSrc.filter(r => r.src === srcVal && r.sk === 'Qualified').length;
+    const cln = rowsNoSrc.filter(r => r.src === srcVal && r.sk === 'Closed').length;
+    const sub = pct(cnt,totSrc)+' share · '+nf(qn)+' qual'+(cln ? ' · '+nf(cln)+' closed' : '');
     const ic = srcIcon(k);
-    return kpiHtml({l:k === '(blank)' ? 'Not recorded' : k, v:nf(sc[k]), s:sub, c:col, ic:ic[0], src:ic[1]?2:1, p:n?sc[k]/n*100:0, fk:srcVal?'src':'', fv:srcVal});
+    return kpiHtml({l:k === '(blank)' ? 'Not recorded' : k, v:nf(cnt), s:sub, c:col, ic:ic[0], src:ic[1]?2:1, p:totSrc?cnt/totSrc*100:0, fk:srcVal?'src':'', fv:srcVal});
   }).join('');
 }
 
