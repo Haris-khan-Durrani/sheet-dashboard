@@ -294,6 +294,34 @@ td.fc:empty{min-width:54px;width:54px;background:repeating-linear-gradient(45deg
 .skel{height:96px;border-radius:18px;background:linear-gradient(90deg,var(--line),var(--surface2),var(--line));background-size:200% 100%;animation:sh 1.2s infinite}
 .skel:first-child{grid-column:span 2;height:114px}
 @keyframes sh{to{background-position:-200% 0}}
+
+/* Executive Login Gate (6-Day Persistent Session) */
+.auth-gate{position:fixed;inset:0;z-index:9999;background:radial-gradient(900px 500px at 80% -10%,rgba(2,132,199,.35),transparent),linear-gradient(135deg,#020d18 0%,#062038 50%,#0a3758 100%);display:flex;align-items:center;justify-content:center;padding:18px;transition:opacity .25s ease}
+.auth-gate.hide{display:none}
+.auth-card{width:100%;max-width:410px;background:rgba(255,255,255,.97);color:#0f172a;border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:32px 28px 28px;box-shadow:0 25px 60px -15px rgba(0,0,0,.65);position:relative;overflow:hidden}
+html.dark .auth-card{background:#111c30;color:#f1f5f9;border-color:#1e2f4d}
+.auth-card::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,#0284c7,#10b981)}
+.auth-logo-wrap{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.auth-logo{height:34px;width:auto;max-width:140px;object-fit:contain;background:#072a44;padding:6px 12px;border-radius:10px}
+.auth-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#0284c7;background:#e0f2fe;border:1px solid #bae6fd;padding:3px 9px;border-radius:99px}
+html.dark .auth-badge{background:rgba(2,132,199,.18);border-color:rgba(2,132,199,.35);color:#38bdf8}
+.auth-card h2{margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em}
+.auth-card p{margin:5px 0 20px;font-size:12.5px;color:#64748b;font-weight:500;line-height:1.45}
+.auth-f{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.auth-f label{font-size:11.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.04em}
+html.dark .auth-f label{color:#94a3b8}
+.auth-inp-w{position:relative;display:flex;align-items:center}
+.auth-inp-w input{width:100%;height:44px;border:1.5px solid #cbd5e1;border-radius:12px;padding:0 40px 0 14px;font-size:13.5px;font-weight:600;background:#f8fafc;color:#0f172a;transition:all .15s}
+html.dark .auth-inp-w input{background:#16243d;border-color:#263b5e;color:#f1f5f9}
+.auth-inp-w input:focus{background:#fff;border-color:#0284c7;box-shadow:0 0 0 3.5px rgba(2,132,199,.15);outline:none}
+html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
+.auth-eye{position:absolute;right:10px;border:0;background:none;color:#64748b;cursor:pointer;padding:4px;font-size:15px;line-height:1}
+.auth-err{display:none;background:#ffe4e6;color:#be123c;border:1px solid #fecdd3;border-radius:11px;padding:9px 12px;font-size:12px;font-weight:700;margin-bottom:14px}
+.auth-btn{width:100%;height:46px;border:0;border-radius:12px;background:linear-gradient(125deg,#072a44,#0284c7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 22px -8px rgba(2,132,199,.65);transition:transform .15s,box-shadow .15s;margin-top:4px}
+.auth-btn:hover{transform:translateY(-1px);box-shadow:0 14px 26px -8px rgba(2,132,199,.8)}
+.auth-note{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;font-size:11.5px;color:#64748b;font-weight:600}
+@keyframes authShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.auth-card.shake{animation:authShake .28s ease}
 @media (prefers-reduced-motion:reduce){.skel,.dot{animation:none}.sheet,.back,.chips button,.tab-btn,.kpi{transition:none}}
 
 @media (max-width:699px){
@@ -334,12 +362,41 @@ td.fc:empty{min-width:54px;width:54px;background:repeating-linear-gradient(45deg
 </style>
 </head>
 <body>
+<!-- Executive Login Gate (Valid for 6 Days in Browser Storage) -->
+<div class="auth-gate" id="authGate">
+  <form class="auth-card" id="authForm" autocomplete="on">
+    <div class="auth-logo-wrap">
+      <img class="auth-logo" src="https://docman.ae/docman-logo-light.png" alt="Docman" onerror="this.style.display='none'">
+      <span class="auth-badge">&#128274; Executive Access</span>
+    </div>
+    <h2>Sign in to Sales Command</h2>
+    <p>Enter your executive credentials to access real-time pipeline analytics and follow-up threads.</p>
+    <div class="auth-err" id="authErr">Invalid username or password. Please try again.</div>
+    <div class="auth-f">
+      <label for="authUser">Username / Email</label>
+      <div class="auth-inp-w">
+        <input type="email" id="authUser" placeholder="name@brightstone.ae" required autocomplete="username">
+      </div>
+    </div>
+    <div class="auth-f">
+      <label for="authPass">Password</label>
+      <div class="auth-inp-w">
+        <input type="password" id="authPass" placeholder="Enter password" required autocomplete="current-password">
+        <button type="button" class="auth-eye" id="authEye" aria-label="Show password" title="Show/Hide Password">&#128065;</button>
+      </div>
+    </div>
+    <button type="submit" class="auth-btn">Access Executive Dashboard &rarr;</button>
+    <div class="auth-note">&#10003; Session stays signed in for 6 days on this browser</div>
+  </form>
+</div>
+
 <header>
   <img class="logo" src="https://docman.ae/docman-logo-light.png" alt="Docman" onerror="this.style.display='none'">
   <div class="hright">
     <span class="hdate" id="hdate"></span>
     <button class="rbtn" id="themeBtn" aria-label="Toggle Dark/Light Theme" title="Toggle Dark / Light Mode">&#9790;</button>
     <button class="rbtn" id="refresh" aria-label="Refresh now" title="Refresh now">&#8635;</button>
+    <button class="rbtn" id="logoutBtn" aria-label="Sign out" title="Sign out">&#10162;</button>
     <div class="live">
       <select id="f-book" aria-label="Spreadsheet" style="display:none"></select>
       <span class="dot sync" id="dot"></span>
@@ -467,6 +524,19 @@ td.fc:empty{min-width:54px;width:54px;background:repeating-linear-gradient(45deg
 <script>
 /*__INIT_DATA__*/
 const REFRESH_MS = 15000, PAGE = 20, CK = 'sd_cache_v12';
+const AUTH_KEY = 'sd_exec_auth_v1', AUTH_TTL_MS = 6 * 24 * 60 * 60 * 1000; // 6 days in ms
+const AUTH_USER = 'farhan@brightstone.ae', AUTH_PASS = 'Admin@123@docman';
+
+function isAuthed(){
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (s && s.u === AUTH_USER && s.exp > Date.now()) return true;
+    localStorage.removeItem(AUTH_KEY);
+  } catch (e) {}
+  return false;
+}
 const SC = {Qualified:'#10b981',Closed:'#047857',Unqualified:'#e11d48',Pending:'#d97706',Inactive:'#64748b',Future:'#3b82f6','No status':'#cbd5e1'};
 const PAL = ['#0284c7','#2563eb','#10b981','#d97706','#7c3aed','#e11d48','#0891b2','#ea580c','#475569'];
 const $ = id => document.getElementById(id);
@@ -1180,6 +1250,7 @@ function handleDataError(e){
 }
 
 function poll(){
+  if (!isAuthed()) { $('authGate').classList.remove('hide'); return; }
   if (busy || document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false)) { next(); return; }
   busy = true; status('sync', ALL.length ? 'Live' : 'Syncing');
 
@@ -1198,12 +1269,7 @@ function poll(){
 let timer; function next(){ clearTimeout(timer); timer = setTimeout(() => document.hidden ? next() : poll(), REFRESH_MS); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ clearTimeout(timer); timer = setTimeout(poll, 600); } });
 
-window.addEventListener('DOMContentLoaded', () => {
-  bind();
-  $('hdate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  $('refresh').onclick = () => { clearTimeout(timer); poll(); };
-  $('f-book').addEventListener('change', e => { BOOK = e.target.value; STAMP = ''; F.sheet = ''; page = 0; clearTimeout(timer); poll(); });
-
+function startDashboardData(){
   // 1. Instant render from server-injected data (0 XHR needed on mobile!)
   if (window.__INIT__ && window.__INIT__.sheets) {
     const d = window.__INIT__;
@@ -1222,6 +1288,53 @@ window.addEventListener('DOMContentLoaded', () => {
     if (c && c.sheets){ BOOK = c.book; STAMP = c.stamp; load(c); status('sync','Updating'); }
   } catch(e){}
   poll();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  bind();
+  $('hdate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  $('refresh').onclick = () => { clearTimeout(timer); poll(); };
+  $('f-book').addEventListener('change', e => { BOOK = e.target.value; STAMP = ''; F.sheet = ''; page = 0; clearTimeout(timer); poll(); });
+
+  // Login Gate bindings
+  $('authEye').onclick = () => {
+    const inp = $('authPass');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  };
+  $('logoutBtn').onclick = () => {
+    try { localStorage.removeItem(AUTH_KEY); } catch(e){}
+    clearTimeout(timer);
+    $('authPass').value = '';
+    $('authGate').classList.remove('hide');
+    $('authUser').focus();
+  };
+  $('authForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = ($('authUser').value || '').trim().toLowerCase();
+    const p = $('authPass').value || '';
+    if (u === AUTH_USER && p === AUTH_PASS) {
+      $('authErr').style.display = 'none';
+      try {
+        localStorage.setItem(AUTH_KEY, JSON.stringify({ u: AUTH_USER, exp: Date.now() + AUTH_TTL_MS }));
+      } catch(err){}
+      $('authGate').classList.add('hide');
+      startDashboardData();
+    } else {
+      $('authErr').style.display = 'block';
+      const card = $('authForm');
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+    }
+  });
+
+  if (isAuthed()) {
+    $('authGate').classList.add('hide');
+    startDashboardData();
+  } else {
+    $('authGate').classList.remove('hide');
+    setTimeout(() => $('authUser').focus(), 50);
+  }
 });
 </script>
 </body>
