@@ -72,6 +72,17 @@ main{padding:14px 14px 56px;max-width:1820px;margin:0 auto}
 .chips button:hover{border-color:var(--line);color:var(--ink)}
 .chips button.on{background:linear-gradient(125deg,#072a44,#0f4c75);color:#fff;box-shadow:0 6px 14px -5px rgba(7,42,68,.6)}
 html.dark .chips button.on{background:linear-gradient(125deg,#0284c7,#0369a1)}
+
+/* Day-by-Day Prev / Date / Next Stepper right after Today */
+.day-nav{flex:none;display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:11px;height:36px;padding:2px;gap:2px;transition:all .15s}
+.day-nav.on{background:linear-gradient(125deg,#072a44,#0f4c75);border-color:transparent;box-shadow:0 6px 14px -5px rgba(7,42,68,.6)}
+html.dark .day-nav.on{background:linear-gradient(125deg,#0284c7,#0369a1)}
+.day-nav button.dn-arr{width:28px;height:30px;padding:0;border:0;border-radius:8px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;transition:all .14s}
+.day-nav button.dn-arr:hover{background:var(--accent);color:#fff}
+.day-nav.on button.dn-arr{background:rgba(255,255,255,.16);color:#fff}
+.day-nav.on button.dn-arr:hover{background:rgba(255,255,255,.3)}
+.day-nav button.dn-lbl{height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--ink);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:-.01em}
+.day-nav.on button.dn-lbl{color:#fff}
 .search-box{position:relative;flex:0 1 310px;min-width:220px;display:flex;align-items:center}
 .search-box input{width:100%;height:38px;border:1px solid var(--line);border-radius:12px;padding:0 36px 0 36px;font-size:12.5px;font-weight:600;background:var(--surface);color:var(--ink);box-shadow:inset 0 1px 2px rgba(15,23,42,.03);transition:border-color .18s,box-shadow .18s,background .18s;-webkit-appearance:none;appearance:none}
 .search-box input::-webkit-search-decoration,.search-box input::-webkit-search-cancel-button,.search-box input::-webkit-search-results-button,.search-box input::-webkit-search-results-decoration{display:none}
@@ -421,6 +432,11 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
     <div class="row1">
       <div class="chips" id="presets">
         <button data-p="today">Today</button>
+        <div class="day-nav" id="dayNav" title="Step day by day">
+          <button type="button" class="dn-arr" id="dnPrev" aria-label="Previous day" title="Previous day">&#8249;</button>
+          <button type="button" class="dn-lbl" id="dnDate" title="Click to filter this date">19 Nov 2026</button>
+          <button type="button" class="dn-arr" id="dnNext" aria-label="Next day" title="Next day">&#8250;</button>
+        </div>
         <button data-p="yesterday">Yesterday</button>
         <button data-p="7">Last 7 days</button>
         <button data-p="30">Last 30 days</button>
@@ -720,6 +736,36 @@ const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 let calView = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let calPickStep = 0; // 0 = next click sets start, 1 = next click sets end
 let calHoverIso = '';
+let navCursor = new Date(); // Tracks the single-day Prev/Next navigator date
+
+function fmtFullDate(dObj){
+  return dObj.getDate() + ' ' + MO_SHORT[dObj.getMonth()] + ' ' + dObj.getFullYear();
+}
+
+function updateDayNavUI(isSingleDayActive){
+  if ($('dnDate')) $('dnDate').textContent = fmtFullDate(navCursor);
+  if ($('dayNav')) $('dayNav').classList.toggle('on', !!isSingleDayActive);
+}
+
+function stepDayNav(deltaDays){
+  navCursor = new Date(navCursor.getFullYear(), navCursor.getMonth(), navCursor.getDate() + deltaDays);
+  const dIso = iso(navCursor);
+  const todayIso = iso(new Date());
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  const yestIso = iso(yest);
+
+  F.from = dIso; F.to = dIso;
+  $('f-from').value = dIso; $('f-to').value = dIso;
+  $('range').classList.remove('show');
+  $('btn-custom').innerHTML = '&#128197; Custom Range';
+
+  document.querySelectorAll('#presets > button').forEach(x => {
+    const p = x.dataset.p;
+    x.classList.toggle('on', (p === 'today' && dIso === todayIso) || (p === 'yesterday' && dIso === yestIso));
+  });
+  updateDayNavUI(true);
+  page = 0; schedule();
+}
 
 function getLeadDaysMap(){
   const m = {};
@@ -790,17 +836,18 @@ function renderCalendar(){
 
 function applyPreset(p){
   const t = new Date(), y = t.getFullYear(), m = t.getMonth(); let a = '', b = '';
-  if (p === 'today') a = b = iso(t);
-  else if (p === 'yesterday'){ const d = new Date(t); d.setDate(d.getDate()-1); a = b = iso(d); }
+  if (p === 'today') { a = b = iso(t); navCursor = new Date(t); }
+  else if (p === 'yesterday'){ const d = new Date(t); d.setDate(d.getDate()-1); a = b = iso(d); navCursor = new Date(d); }
   else if (p === '7' || p === '14' || p === '30'){ const d = new Date(t); d.setDate(d.getDate()-(+p-1)); a = iso(d); b = iso(t); }
   else if (p === 'month'){ a = iso(new Date(y,m,1)); b = iso(t); }
   else if (p === 'lastmonth'){ a = iso(new Date(y,m-1,1)); b = iso(new Date(y,m,0)); }
   else if (p === 'quarter'){ const qm = Math.floor(m/3)*3; a = iso(new Date(y,qm,1)); b = iso(t); }
   if (p === 'custom'){
     const isOpen = $('range').classList.toggle('show');
-    document.querySelectorAll('#presets button').forEach(x => x.classList.toggle('on', x.dataset.p === 'custom'));
+    document.querySelectorAll('#presets > button').forEach(x => x.classList.toggle('on', x.dataset.p === 'custom'));
+    updateDayNavUI(false);
     if (isOpen) {
-      if (F.from) { const p = F.from.split('-'); calView = new Date(+p[0], +p[1]-1, 1); }
+      if (F.from) { const pt = F.from.split('-'); calView = new Date(+pt[0], +pt[1]-1, 1); }
       renderCalendar();
     }
     return;
@@ -808,8 +855,9 @@ function applyPreset(p){
   F.from = a; F.to = b; $('f-from').value = a; $('f-to').value = b;
   $('btn-custom').innerHTML = '&#128197; Custom Range';
   $('range').classList.remove('show');
-  document.querySelectorAll('#presets button').forEach(x => x.classList.toggle('on', x.dataset.p === p));
+  document.querySelectorAll('#presets > button').forEach(x => x.classList.toggle('on', x.dataset.p === p));
   document.querySelectorAll('#calQuick .cal-q').forEach(x => x.classList.toggle('on', x.dataset.qp === p));
+  updateDayNavUI(p === 'today' || p === 'yesterday');
   page = 0; schedule();
 }
 function toggleSheet(open){
@@ -863,7 +911,11 @@ function bind(){
     if (!btn) return;
     selectTab(btn.dataset.tab);
   });
-  document.querySelectorAll('#presets button').forEach(b => b.onclick = () => applyPreset(b.dataset.p));
+  updateDayNavUI(false);
+  $('dnPrev').onclick = () => stepDayNav(-1);
+  $('dnNext').onclick = () => stepDayNav(1);
+  $('dnDate').onclick = () => stepDayNav(0);
+  document.querySelectorAll('#presets > button').forEach(b => b.onclick = () => applyPreset(b.dataset.p));
   const map = {'f-sheet':'sheet','f-st':'st','f-asg':'asg','f-src':'src','f-soon':'soon','f-nat':'nat','f-fz':'fz','f-vmin':'vmin','f-vmax':'vmax'};
   Object.keys(map).forEach(id => $(id).addEventListener('input', e => {
     F[map[id]] = e.target.value;
