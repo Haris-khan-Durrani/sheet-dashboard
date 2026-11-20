@@ -203,26 +203,16 @@ html.dark .af-tag{background:rgba(2,132,199,.2);color:#7dd3fc;border-color:rgba(
 #kpis .kpi:first-child .pbar{background:rgba(255,255,255,.16)}
 #kpis .kpi:first-child .pbar > i{background:linear-gradient(90deg,#38bdf8,#4ade80)}
 
-/* Executive Conversion Funnel Ribbon */
-.funnel{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--sh)}
-.f-step{position:relative;display:flex;align-items:center;gap:12px;padding:6px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
-.f-num{width:28px;height:28px;border-radius:9px;background:var(--c);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
-.f-body{min-width:0;flex:1}
-.f-lbl{font-size:11px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
-.f-val{font-size:15px;font-weight:800;color:var(--ink);margin-top:1px}
-.f-bar{height:4px;background:var(--line);border-radius:99px;margin-top:5px;overflow:hidden}
-.f-bar > i{display:block;height:100%;background:var(--c);border-radius:99px}
-
 .sec{margin:18px 4px 9px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
 
-/* Lead Source Cards - Fixed compact proportions (never over-stretches when few channels exist) */
-#srcKpis{grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}
-.kpi.src{padding-right:14px}.kpi.src .l::before{display:none}.kpi.src .l{padding-right:42px;font-size:12.5px;color:var(--ink);font-weight:800}
-.kpi.src.two .l{padding-right:58px}
-.ico{position:absolute;right:12px;top:12px;display:flex}
-.ico svg{width:28px;height:28px;display:block;filter:drop-shadow(0 2px 5px rgba(15,23,42,.16))}
-.ico.two svg+svg{margin-left:-8px}
-.ico .ltr{width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+/* Lead Source Cards - 2 Columns on Mobile, Auto-Fill on Tablet, 6 Columns on Desktop */
+#srcKpis{grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi.src{padding:12px 11px}.kpi.src .l::before{display:none}.kpi.src .l{padding-right:34px;font-size:11.5px;color:var(--ink);font-weight:800}
+.kpi.src.two .l{padding-right:48px}
+.ico{position:absolute;right:10px;top:10px;display:flex}
+.ico svg{width:24px;height:24px;display:block;filter:drop-shadow(0 2px 5px rgba(15,23,42,.16))}
+.ico.two svg+svg{margin-left:-6px}
+.ico .ltr{width:24px;height:24px;border-radius:50%;background:var(--c);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
 
 /* Analytics & Team Cards */
 .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:13px;margin:14px 0}
@@ -357,9 +347,16 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
   .htitle{grid-column:2;grid-row:1;border-left:1px solid rgba(255,255,255,.2);padding-left:20px}
   .hright{grid-column:3}.hdate{display:block}
   .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  #srcKpis{grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}
+  .kpi.src{padding:14px 15px;padding-right:14px}
+  .kpi.src .l{padding-right:42px;font-size:12.5px}
+  .kpi.src.two .l{padding-right:58px}
+  .ico{right:12px;top:12px}
+  .ico svg{width:28px;height:28px}
+  .ico.two svg+svg{margin-left:-8px}
+  .ico .ltr{width:28px;height:28px;font-size:13px}
   #kpis .kpi:first-child{grid-column:span 1}.skel:first-child{grid-column:span 1}
   .kpi .v{font-size:23px}#kpis .kpi:first-child .v{font-size:27px}
-  .funnel{grid-template-columns:repeat(4,1fr)}
   .chart{height:255px}
   .c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}
   .sheet{position:static;transform:none;display:none;border-radius:18px;border:1px solid var(--line);margin:0 0 14px;max-height:none;box-shadow:var(--sh)}
@@ -513,8 +510,6 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
 
   <section class="kpis" id="kpis"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></section>
 
-  <section class="funnel" id="funnel"></section>
-
   <div class="sec" id="srcTitle" style="display:none"><span>Lead Acquisition Channels</span><span>Click any channel to filter</span></div>
   <section class="kpis" id="srcKpis"></section>
 
@@ -541,7 +536,7 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
 
 <script>
 /*__INIT_DATA__*/
-const REFRESH_MS = 15000, PAGE = 20, CK = 'sd_cache_v13';
+const REFRESH_MS = 15000, PAGE = 20, CK = 'sd_cache_v14';
 const AUTH_KEY = 'sd_exec_auth_v1', AUTH_TTL_MS = 6 * 24 * 60 * 60 * 1000; // 6 days in ms
 const AUTH_USER = 'farhan@brightstone.ae', AUTH_PASS = 'Admin@123@docman';
 const MO_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1106,14 +1101,6 @@ function renderKpis(rows){
     {l:'Urgent Leads', v:nf(hi), pill:pct(hi,qualOrClosed.length), s:'High priority qualified', c:'#dc2626', p:qualOrClosed.length?hi/qualOrClosed.length*100:0, fk:'soon', fv:'High', svg:K_ICO.urg},
     {l:'Called < 60s', v:pct(fast,called.length), pill:nf(fast)+'/'+nf(called.length), s:'Speed-to-lead SLA', c:'#6366f1', p:fastPct, svg:K_ICO.fast}
   ].map(kpiHtml).join('');
-
-  // Render Executive Pipeline Funnel
-  $('funnel').innerHTML = [
-    {n:'1', l:'Total Captured', p:'100%', v:nf(n)+' leads', w:100, c:'#0284c7'},
-    {n:'2', l:'Called Under 60s', p:pct(fast,called.length), v:nf(fast)+' instant calls', w:fastPct, c:'#6366f1'},
-    {n:'3', l:'Total Qualified (incl. Closed)', p:pct(q+cl,n), v:nf(q+cl)+' qualified', w:convPct, c:'#10b981'},
-    {n:'4', l:'Closed Won Deals', p:pct(cl,q+cl)+' close rate', v:nf(cl)+' closed deals', w:(q+cl)?cl/(q+cl)*100:0, c:'#047857'}
-  ].map(f => '<div class="f-step" style="--c:'+f.c+'"><span class="f-num">'+f.n+'</span><div class="f-body"><div class="f-lbl"><span>'+esc(f.l)+'</span><b>'+esc(f.p)+'</b></div><div class="f-val">'+esc(f.v)+'</div><div class="f-bar"><i style="width:'+Math.min(100,Math.max(0,f.w)).toFixed(1)+'%"></i></div></div></div>').join('');
 
   // Render Lead Acquisition Channels filtered by current date/search/status filters,
   // while ignoring F.src so clicking a channel highlights it without hiding the others!
