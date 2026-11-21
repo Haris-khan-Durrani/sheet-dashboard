@@ -15,7 +15,8 @@ const {
   syncNow,
   getGoogleAuth,
   getOAuthConsentUrl,
-  handleOAuthCallback
+  handleOAuthCallback,
+  getHealthStatus
 } = require('./lib/sheets-engine');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -52,6 +53,24 @@ app.get('/api/leads', async (req, res) => {
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Real-Time Health & Diagnostic Check
+app.get('/api/health', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const health = getHealthStatus();
+  res.status(health.status === 'healthy' ? 200 : 503).json(health);
+});
+
+// Instant Webhook Trigger (Allows Google Apps Script onEdit trigger to force sync in <1s)
+app.all('/api/sync', async (req, res) => {
+  try {
+    await syncNow();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ok: true, health: getHealthStatus() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

@@ -586,9 +586,29 @@ function fmtDate(y, m, d) {
   return y + '-' + ('0' + m).slice(-2) + '-' + ('0' + d).slice(-2);
 }
 
+function getHealthStatus() {
+  const cfg = getConfig();
+  const authState = getGoogleAuth();
+  const sheets = state.memoryCache.sheets || [];
+  const totalRows = sheets.reduce((sum, s) => sum + (s.rows ? s.rows.length : 0), 0);
+  return {
+    status: authState.ready ? (state.memoryCache.cerr ? 'degraded' : 'healthy') : 'unauthorized',
+    connected: authState.ready && !state.memoryCache.cerr,
+    spreadsheetId: cfg.spreadsheetId,
+    authMode: authState.mode,
+    tabsCount: sheets.length,
+    tabs: sheets.map(s => ({ name: s.name, rows: (s.rows || []).length })),
+    totalRows,
+    lastSyncTime: state.memoryCache.updatedAt ? new Date(state.memoryCache.updatedAt).toISOString() : null,
+    syncIntervalMs: cfg.syncIntervalMs,
+    lastError: state.memoryCache.cerr || null,
+    uptimeSeconds: Math.floor(process.uptime ? process.uptime() : 0)
+  };
+}
+
 if (!state.timerStarted) {
   state.timerStarted = true;
   setInterval(() => { syncNow().catch(() => {}); }, Number(process.env.SYNC_INTERVAL_MS) || 10000).unref();
 }
 
-module.exports = { getCachedData, syncNow, getGoogleAuth, getOAuthConsentUrl, handleOAuthCallback };
+module.exports = { getCachedData, syncNow, getGoogleAuth, getOAuthConsentUrl, handleOAuthCallback, getHealthStatus };

@@ -536,7 +536,7 @@ html.dark .auth-inp-w input:focus{background:#111c30;border-color:#38bdf8}
 
 <script>
 /*__INIT_DATA__*/
-const REFRESH_MS = 15000, PAGE = 20, CK = 'sd_cache_v14';
+const REFRESH_MS = 8000, PAGE = 20, CK = 'sd_cache_v15';
 const AUTH_KEY = 'sd_exec_auth_v1', AUTH_TTL_MS = 6 * 24 * 60 * 60 * 1000; // 6 days in ms
 const AUTH_USER = 'farhan@brightstone.ae', AUTH_PASS = 'Admin@123@docman';
 const MO_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1302,7 +1302,10 @@ function loadBookList(){
 function handleDataSuccess(d){
   busy = false; $('err').style.display = 'none';
   if (d && d.book && !BOOK) BOOK = d.book;
-  status('', 'Live · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  const tmStr = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  status('', 'Live · ' + tmStr);
+  if ($('liveTxt')) $('liveTxt').title = 'Google Sheet connected · ' + nf(ALL.length) + ' leads active · Last checked ' + tmStr;
+  if ($('dot')) $('dot').title = 'Google Sheet connection live';
   if (d && !d.same && d.sheets){
     STAMP = d.stamp; load(d);
     try { localStorage.setItem(CK, JSON.stringify({book:d.book,stamp:d.stamp,sheets:d.sheets})); } catch(e){}
