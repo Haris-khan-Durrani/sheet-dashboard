@@ -4,6 +4,20 @@ import { NextResponse } from 'next/server';
 import { getCachedData, getGoogleAuth } from '../lib/sheets-engine';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+function resolveHtmlPath() {
+  const candidates = [
+    path.resolve(process.cwd(), '..', 'Index.html'),
+    path.resolve(process.cwd(), 'Index.html'),
+    path.join(__dirname, '..', '..', 'Index.html'),
+    path.join(__dirname, '..', 'Index.html')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return path.resolve(process.cwd(), '..', 'Index.html');
+}
 
 export async function GET() {
   try {
@@ -16,15 +30,27 @@ export async function GET() {
         <body><div class="box"><h2>Connect Google Sheets &amp; Drive</h2>
         <p>Click below once to authorize your Google account. The server will save your refresh token automatically so the dashboard runs 24/7 on its own.</p>
         <a class="btn" href="/auth/google">Sign in with Google &rarr;</a></div></body></html>`;
-      return new NextResponse(loginHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return new NextResponse(loginHtml, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+        }
+      });
     }
 
-    const htmlPath = path.resolve(process.cwd(), '..', 'Index.html');
+    const htmlPath = resolveHtmlPath();
     let html = fs.readFileSync(htmlPath, 'utf8');
     const initData = await getCachedData('');
     const safeJson = JSON.stringify(initData).replace(/<\//g, '<\\/');
     html = html.replace('/*__INIT_DATA__*/', 'window.__INIT__ = ' + safeJson + ';');
-    return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (err: any) {
     return new NextResponse('Dashboard Error: ' + err.message, { status: 500 });
   }

@@ -55,6 +55,19 @@ app.get('/api/leads', async (req, res) => {
   }
 });
 
+function resolveHtmlPath() {
+  const candidates = [
+    path.join(__dirname, '..', 'Index.html'),
+    path.join(__dirname, 'Index.html'),
+    path.resolve(process.cwd(), 'Index.html'),
+    path.resolve(process.cwd(), '..', 'Index.html')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return path.join(__dirname, '..', 'Index.html');
+}
+
 // Main Executive Dashboard Route
 app.get('/', async (req, res) => {
   try {
@@ -70,12 +83,15 @@ app.get('/', async (req, res) => {
         <a class="btn" href="/auth/google">Sign in with Google &rarr;</a></div></body></html>`);
     }
 
-    const htmlPath = path.join(__dirname, '..', 'Index.html');
+    const htmlPath = resolveHtmlPath();
     let html = fs.readFileSync(htmlPath, 'utf8');
     const initData = await getCachedData('');
     const safeJson = JSON.stringify(initData).replace(/<\//g, '<\\/');
     html = html.replace('/*__INIT_DATA__*/', 'window.__INIT__ = ' + safeJson + ';');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.send(html);
   } catch (err) {
     res.status(500).send('Dashboard Error: ' + err.message);
