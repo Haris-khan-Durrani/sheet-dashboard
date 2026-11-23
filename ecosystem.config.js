@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'sheet-dashboard',
+      name: 'sales-dashboard',
       script: './next-dashboard/server.js',
       cwd: './next-dashboard',
       max_memory_restart: '500M',
